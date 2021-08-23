@@ -3,22 +3,34 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
-const jwksClient = require('jwks-rsa');
+const mongoose = require('mongoose');
+const server = express();
+server.use(cors());
+const PORT = process.env.PORT;
 
-const app = express();
-app.use(cors());
+//connection to the test database on our locally running instance of MongoDB.
+mongoose.connect('mongodb://localhost:27017/bookData', {useNewUrlParser: true, useUnifiedTopology: true});
 
-const PORT = process.env.PORT || 3001;
+const BookSchema = new mongoose.Schema({
+  title: String,
+  description: String,
+  status: String,
+  email:String,
+});
 
-app.get('/test', (request, response) => {
+const Books = mongoose.model('Kitten', BookSchema );
 
-  // TODO: 
-  // STEP 1: get the jwt from the headers
-  // STEP 2. use the jsonwebtoken library to verify that it is a valid jwt
-  // jsonwebtoken dock - https://www.npmjs.com/package/jsonwebtoken
-  // STEP 3: to prove that everything is working correctly, send the opened jwt back to the front-end
 
+
+
+
+
+
+
+server.get('/test', (req, res) => {
+  res.send('Test Connected!')
 })
 
-app.listen(PORT, () => console.log(`listening on ${PORT}`));
+server.listen(PORT, () => console.log(`listening on ${PORT}`));
+
+
