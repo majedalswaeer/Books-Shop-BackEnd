@@ -3,17 +3,24 @@ const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
 const PORT = process.env.PORT;
+const mongoLink = process.env.mongno_link;
 const server = express();
 server.use(cors());
 const mongoose = require('mongoose');
-
+server.use(express.json());
+// import { useAuth0 } from '@auth0/auth0-react';
+// const { user } = this.props.auth0;
+//_______________________________________________________________
 server.get('/', listenerHandl);
 server.get('/books', getbook);
-function listenerHandl(req, res) {
-    res.send('all good');
-}
+server.post('/postBookFunc', postBookHandler); // be carfull we have to type  server.the method we used like (serer.get or server.post)
 
-mongoose.connect('mongodb://localhost:27017/books', {useNewUrlParser: true, useUnifiedTopology: true});
+server.listen(PORT, () => {
+    console.log('listening to port ', PORT);
+});
+//_______________________________________________________________
+
+mongoose.connect(mongoLink, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const BookSchema = new mongoose.Schema({
     title: String,
@@ -23,7 +30,7 @@ const BookSchema = new mongoose.Schema({
 })
 
 
-const bookModel = mongoose.model('books',BookSchema);
+const bookModel = mongoose.model('books', BookSchema);
 
 function seedDataCollection() {
     const Potter = new bookModel({
@@ -62,23 +69,58 @@ function seedDataCollection() {
     Delusion.save();
     Coraline.save();
 }
+
 console.log(bookModel)
 // seedDataCollection();
 
-//localhost:3001/books?email=
-function getbook(req,res) {
-    console.log('inside getbook func')
+//_______________________________________________________________
+
+function listenerHandl(req, res) {
+    res.send('all good');
+}
+
+//_______________________________________________________________
+
+//****localhost:3001/books?email=****
+function getbook(req, res) {
     let emailaddress2 = req.query.email;
-    bookModel.find({email:emailaddress2},function(err,bookData){
-        if(err) {
+    bookModel.find({ email: emailaddress2 }, function (err, bookData) {
+        if (err) {
             console.log('error in getting the data')
         } else {
-            console.log(bookData);
+            //console.log(bookData);
             res.send(bookData);
         }
     })
 }
-server.listen(PORT, () => {
-    console.log('listening to port ', PORT);
-});
+
+//_______________________________________________________________
+
+async function  postBookHandler(req, res) {
+    console.log('whats inside', req.query) // if we console log this it will be an empty object because we are using post so it will not be in the query any more, it will be inside the payload in the body
+
+    console.log('whats inside', req.body) //it will be undefined because we have to declare middle ware by creating server using JSON to parse the request body which is line 10
+
+    //
+    let { title, description, status, email } = req.body;
+
+    const addedBook = new bookModel({
+        title: title,
+        description: description,
+        status: status,
+        email: email
+    })
+    await addedBook.save();
+
+    bookModel.find({ email: email }, function (err, bookData) {
+        if (err) {
+            console.log('Coudnt Reload The Data')
+        } else {
+            //console.log(bookData);
+            res.send(bookData);
+        }
+    })
+
+}
+
 
