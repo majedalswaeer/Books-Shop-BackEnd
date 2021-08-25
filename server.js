@@ -1,4 +1,6 @@
 'use strict';
+
+//mongodb://majed:12345@majeddatabases-shard-00-00.lxke3.mongodb.net:27017,majeddatabases-shard-00-01.lxke3.mongodb.net:27017,majeddatabases-shard-00-02.lxke3.mongodb.net:27017/bookapp?ssl=true&replicaSet=atlas-ajtsf6-shard-0&authSource=admin&retryWrites=true&w=majority
 const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
@@ -14,7 +16,7 @@ server.use(express.json());
 server.get('/', listenerHandl);
 server.get('/books', getbook);
 server.post('/postBookFunc', postBookHandler); // be carfull we have to type  server.the method we used like (serer.get or server.post)
-
+server.delete('/deleteBookFunc/:bookIDD', deleteBookFuncHandler);
 server.listen(PORT, () => {
     console.log('listening to port ', PORT);
 });
@@ -70,7 +72,7 @@ function seedDataCollection() {
     Coraline.save();
 }
 
-console.log(bookModel)
+// console.log(bookModel)
 // seedDataCollection();
 
 //_______________________________________________________________
@@ -81,7 +83,7 @@ function listenerHandl(req, res) {
 
 //_______________________________________________________________
 
-//****localhost:3001/books?email=****
+//****localhost:3001/getbook?email=****
 function getbook(req, res) {
     let emailaddress2 = req.query.email;
     bookModel.find({ email: emailaddress2 }, function (err, bookData) {
@@ -95,22 +97,32 @@ function getbook(req, res) {
 }
 
 //_______________________________________________________________
-
-async function  postBookHandler(req, res) {
+//****localhost:3001/postBookHandler?email=****
+async function postBookHandler(req, res) {
     console.log('whats inside', req.query) // if we console log this it will be an empty object because we are using post so it will not be in the query any more, it will be inside the payload in the body
 
     console.log('whats inside', req.body) //it will be undefined because we have to declare middle ware by creating server using JSON to parse the request body which is line 10
 
-    //
     let { title, description, status, email } = req.body;
 
-    const addedBook = new bookModel({
-        title: title,
-        description: description,
-        status: status,
-        email: email
+    //way 1
+    // const addedBook = new bookModel({
+    //     title: title,
+    //     description: description,
+    //     status: status,
+    //     email: email
+    // })
+    // await addedBook.save();
+
+
+    //way2
+    await bookModel.create({
+        title,
+        description,
+        status,
+        email,
     })
-    await addedBook.save();
+
 
     bookModel.find({ email: email }, function (err, bookData) {
         if (err) {
@@ -120,6 +132,36 @@ async function  postBookHandler(req, res) {
             res.send(bookData);
         }
     })
+
+}
+//****localhost:3001/deleteBookFuncHandler/ew323232wsw4t4
+async function deleteBookFuncHandler(req, res) {
+
+    console.log('inside delete func', `items ID: ${req.params.bookIDD}`)
+
+    let booksDataDelete = req.params.bookIDD;
+
+    await bookModel.remove({ _id: booksDataDelete }, (error, bookDataa) => {
+        if (error) {
+            console.log('Coudnt Reload The Data')
+        } else {
+            console.log('Deleted', bookDataa)
+            let email = req.query.email;
+            bookModel.find({email}, function (err, bookData) {
+                if (err) {
+                    console.log('Coudnt Reload The Data')
+                } else {
+                    //console.log(bookData);
+                    res.send(bookData);
+                }
+            })
+        }
+        
+       
+    })
+
+
+
 
 }
 
