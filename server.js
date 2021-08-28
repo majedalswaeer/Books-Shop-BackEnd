@@ -17,6 +17,7 @@ server.get('/', listenerHandl);
 server.get('/books', getbook);
 server.post('/postBookFunc', postBookHandler); // be carfull we have to type  server.the method we used like (serer.get or server.post)
 server.delete('/deleteBookFunc/:bookIDD', deleteBookFuncHandler);
+server.put('/putBookFunc/:bookIDDD',putBookHandler);
 server.listen(PORT, () => {
     console.log('listening to port ', PORT);
 });
@@ -155,13 +156,36 @@ async function deleteBookFuncHandler(req, res) {
                     res.send(bookData);
                 }
             })
-        }
-        
-       
+        } 
     })
+}
 
+ function putBookHandler(req,res){
 
+    let {title,description,status,email}=req.body
 
+    let bookIDDD=req.params.bookIDDD;
+
+    bookModel.find({_id:bookIDDD},async(error,bookDataa)=>{
+        console.log('newwewe',bookDataa)
+        bookDataa[0].title=title;
+        bookDataa[0].description=description;
+        bookDataa[0].status=status;
+        bookDataa[0].email=email;
+
+        console.log('newoneeeeee',bookDataa)
+
+         bookDataa[0].save().then(()=>{
+            bookModel.find({ email: email }, function (err, bookDataa) {
+                if (err) {
+                    console.log('Coudnt Reload The Data')
+                } else {
+                    //console.log(bookData);
+                    res.send(bookDataa);
+                }
+            })
+         })
+    })
 
 }
 
